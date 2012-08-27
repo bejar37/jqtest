@@ -83,9 +83,31 @@
     }
   });
 
+  window.UsersJQView = Backbone.View.extend({
+
+    initialize: function() {
+      _.bindAll(this, 'render');
+      this.collection.bind('reset', this.render);
+      this.collection.bind('add', this.render);
+    },
+
+    render: function() {
+      var $table;
+      var collection = this.collection;
+
+      $table = window.usersTable;
+
+      this.collection.each(function(user, i) {
+        $table.jqGrid('addRowData', (i + 1), user.toJSON());
+      });
+    }
+  });
+
+
   window.UsersDemo = Backbone.Router.extend({
     routes: {
-      '': 'home'
+      '': 'home',
+      'jqgrid': 'jqgrid'
     },
 
     initialize: function() {
@@ -95,6 +117,9 @@
       this.usersView = new UsersView({
         collection: window.users
       });
+      this.usersjqView = new UsersJQView({
+        collection: window.users
+      });
     },
 
     home: function() {
@@ -102,7 +127,20 @@
       $container.empty();
       $container.append(this.addUserView.render().el);
       $container.append(this.usersView.render().el);
+    },
+
+    jqgrid: function() {
+      var $container = $("#container");
+      $container.append(this.addUserView.render().el);
+      window.usersTable = $("#jqusers").jqGrid({
+        datatype: 'local',
+        width: '100%',
+        colNames: ['Name', 'Role'],
+        colModel: [ {name: 'Name', align: 'left'},
+                    {name: 'Role', align: 'left'}]
+      });
     }
+
   });
 
   $(function() {
