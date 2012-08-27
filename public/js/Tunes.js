@@ -37,6 +37,7 @@
     initialize: function() {
       _.bindAll(this, 'render');
       this.template = _.template($("#user-add-template").html());
+      this.model =  new User();
     },
 
     addToCollection: function() {
@@ -49,6 +50,7 @@
       window.users.add(this.model);
       $name.val('');
       $role.val('');
+      this.model = new User();
     }
   });
 
@@ -86,9 +88,15 @@
   window.UsersJQView = Backbone.View.extend({
 
     initialize: function() {
-      _.bindAll(this, 'render');
+      _.bindAll(this, 'render', 'add');
       this.collection.bind('reset', this.render);
-      this.collection.bind('add', this.render);
+      this.collection.bind('add', this.add);
+    },
+
+    add: function(model) {
+      console.log('adding');
+      console.log(model);
+      window.usersTable.jqGrid('addRowData', 0,  model.toJSON());
     },
 
     render: function() {
@@ -112,17 +120,13 @@
 
     initialize: function() {
       this.addUserView = new AddUserView({
-        model: new User()
-      });
-      this.usersView = new UsersView({
-        collection: window.users
-      });
-      this.usersjqView = new UsersJQView({
-        collection: window.users
       });
     },
 
     home: function() {
+      this.usersView = new UsersView({
+        collection: window.users
+      });
       var $container = $("#container");
       $container.empty();
       $container.append(this.addUserView.render().el);
@@ -130,15 +134,19 @@
     },
 
     jqgrid: function() {
+      this.usersjqView = new UsersJQView({
+        collection: window.users
+      });
       var $container = $("#container");
-      $container.append(this.addUserView.render().el);
+      $container.prepend(this.addUserView.render().el);
       window.usersTable = $("#jqusers").jqGrid({
         datatype: 'local',
         width: '100%',
-        colNames: ['Name', 'Role'],
-        colModel: [ {name: 'Name', align: 'left'},
-                    {name: 'Role', align: 'left'}]
+        colNames: ['name', 'role'],
+        colModel: [ {name: 'name', align: 'left'},
+                    {name: 'role', align: 'left'}]
       });
+      this.usersjqView.render();
     }
 
   });
